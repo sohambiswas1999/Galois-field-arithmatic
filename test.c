@@ -57,4 +57,7 @@ int main()
     }
 
     parse_to_hex(poly);
+
+    printf("exp\n");
+    printf("%llx", t[36]);
 }

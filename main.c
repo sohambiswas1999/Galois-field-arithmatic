@@ -6,14 +6,14 @@ typedef unsigned int uint32;
 typedef char uint8;
 typedef long long unsigned int uint64;
 
-uint16_t input1[32] = {0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
-                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
-                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
-                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b};
-uint16_t input[32] = {0xf9, 0x2E, 0x40, 0xAD, 0x6F, 0x28, 0x1C, 0x8A,
-                      0x38, 0x2A, 0xFD, 0xC4, 0x9E, 0x13, 0x72, 0x65,
-                      0x44, 0x55, 0xBE, 0xC8, 0xCE, 0xEA, 0x04, 0x3A,
-                      0x81, 0x4C, 0x83, 0x5B, 0x7F, 0xE9, 0xEF, 0xF6};
+uint16_t input[32] = {0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
+                      0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
+                      0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
+                      0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b};
+uint16_t input1[32] = {0xE9, 0x2E, 0x40, 0xAD, 0x6F, 0x28, 0x1C, 0x8A,
+                       0x08, 0x2A, 0xFD, 0xC4, 0x9E, 0x13, 0x72, 0x65,
+                       0x94, 0x55, 0xBE, 0xC8, 0xCE, 0xEA, 0x04, 0x3A,
+                       0x61, 0x4C, 0x83, 0x5B, 0x7F, 0xE9, 0xEF, 0xF5};
 
 static uint16_t t[34] = {0x46, 0x43, 0x5b, 0x5a, 0x40, 0xbb, 0xb8, 0xb9,
                          0x1a, 0x5a, 0xc8, 0x4a, 0x4a, 0x11, 0x80, 0x91,
@@ -79,19 +79,27 @@ void parse_to_hex(uint64 *bignum)
         printf("%llx\n", temp[i]);
 }
 
+void slice(uint64 *source, int start, int end)
+{
+    for (int i = start; i < end; i++)
+    {
+        printf("%llx\n", *(source + i));
+    }
+}
+
 uint64_t *eightshiftofx(uint64 *poly)
 {
-    uint64 *p = (uint64 *)calloc(10, sizeof(uint64));
+    uint64 *p = (uint64 *)calloc(20, sizeof(uint64));
     p[0] = poly[8];
     p[1] = poly[9];
-    p[2] = 0;
-    p[3] = 0;
-    p[4] = 0;
-    p[5] = 0;
-    p[6] = 0;
-    p[7] = 0;
-    p[8] = 0;
-    p[9] = 0;
+    p[2] = poly[10];
+    p[3] = poly[11];
+    p[4] = poly[12];
+    p[5] = poly[13];
+    p[6] = poly[14];
+    p[7] = poly[15];
+    p[8] = poly[16];
+    p[9] = poly[17];
 
     return p;
 }
@@ -259,9 +267,11 @@ void barret(uint64 *poly1, uint64 *r)
     {
         r[i] = 0;
     }
-
+    uint64 *X = (uint64 *)calloc(20, sizeof(uint64));
+    *X = *poly1;
     uint64 *Q = (uint64 *)calloc(10, sizeof(uint64));
-    Q = eightshiftofx(poly1); // x/ theta^L-1
+    Q = eightshiftofx(X); // x/ theta^L-1
+    printf("Q:\n");
     parse_to_hex(Q);
 
     uint64 Q2[20] = {0};
@@ -304,7 +314,7 @@ void barret(uint64 *poly1, uint64 *r)
 
     uint64 r3[10];
     printf("X:\n");
-    parse_to_hex(poly1);
+    parse_to_hex(X);
 
     sub(poly1, r1, r3);
     printf("x-QP:");
@@ -332,13 +342,19 @@ void main()
     uint64 poly1[10];
     uint64 poly2[10];
     parse(poly1, input);
+
+    printf("expei:%llx", poly1[12]);
     parse(poly2, input);
+    slice(poly1, 8, 12);
 
     uint64 *poly3 = (uint64 *)calloc(20, sizeof(uint64));
+    mult(poly1, poly2, poly3);
+    printf("input barret:\n");
+    parse_to_hex(poly3);
 
     uint64 poly4[10] = {0};
 
-    barret(poly1, poly4);
+    barret(poly3, poly4);
 
     for (int i = 0; i < 10; i++)
     {
