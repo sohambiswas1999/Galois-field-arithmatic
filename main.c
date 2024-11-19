@@ -268,7 +268,10 @@ void barret(uint64 *poly1, uint64 *r)
         r[i] = 0;
     }
     uint64 *X = (uint64 *)calloc(20, sizeof(uint64));
-    *X = *poly1;
+    for (int i = 0; i < 20; i++)
+    {
+        X[i] = poly1[i];
+    }
     uint64 *Q = (uint64 *)calloc(10, sizeof(uint64));
     Q = eightshiftofx(X); // x/ theta^L-1
     printf("Q:\n");
@@ -345,7 +348,6 @@ void main()
 
     printf("expei:%llx", poly1[12]);
     parse(poly2, input);
-    slice(poly1, 8, 12);
 
     uint64 *poly3 = (uint64 *)calloc(20, sizeof(uint64));
     mult(poly1, poly2, poly3);

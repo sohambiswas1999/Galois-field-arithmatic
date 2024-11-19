@@ -10,7 +10,7 @@ uint16_t input[32] = {0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b};
-uint16_t input1[32] = {0xE9, 0x2E, 0x40, 0xAD, 0x6F, 0x28, 0x1C, 0x8A,
+uint16_t input1[32] = {0xf9, 0x2E, 0x40, 0xAD, 0x6F, 0x28, 0x1C, 0x8A,
                        0x08, 0x2A, 0xFD, 0xC4, 0x9E, 0x13, 0x72, 0x65,
                        0x94, 0x55, 0xBE, 0xC8, 0xCE, 0xEA, 0x04, 0x3A,
                        0x61, 0x4C, 0x83, 0x5B, 0x7F, 0xE9, 0xEF, 0xF5};
@@ -58,7 +58,7 @@ void parset(uint64 *poly, uint16_t *h)
 void parse_to_hex(uint64 *bignum)
 {
     uint64 temp[5] = {0};
-    temp[5] = bignum[1] >> 24 ^ bignum[0] << 5;
+    temp[4] = bignum[1] >> 24 ^ bignum[0] << 5;
     temp[3] = bignum[3] >> 18 ^ bignum[2] << 11 ^ bignum[1] << 40;
     temp[2] = bignum[5] >> 12 ^ bignum[4] << 17 ^ bignum[3] << 46;
     temp[1] = bignum[7] >> 6 ^ bignum[6] << 23 ^ bignum[5] << 52;
@@ -131,43 +131,49 @@ void barret(uint64 *poly1, uint64 *r)
     }
 
     uint64 *X = (uint64 *)calloc(10, sizeof(uint64));
-
     uint64 Q2[20] = {0};
 
     uint64 T[10] = {0};
     parset(T, t);
+    printf("T:\n");
     parse_to_hex(T);
 
     uint64 P[10] = {0};
     parse(P, p);
+    printf("P:\n");
     parse_to_hex(P);
 
-    X = poly1 + 8;
+    X = poly1 + 2;
     printf("X:\n");
     parse_to_hex(X);
 
-    mult(poly1, T, Q2); // Q=XT
+    mult(poly1 + 2, T, Q2); // Q=XT
     printf("QT:\n");
     parse_to_hex(Q2);
 
     uint64 Q3[20] = {0};
     mult(Q2, P, Q3); // first 10 of XT i.e XT/theta^ * P
 
-    uint64 r1[10] = {0};
+    uint64 *r2 = Q3 + 10;
+    uint64 *r1 = poly1 + 10;
 
     // getting last 10 bit of QP i.e QP mod theta^L+1
 
-    printf("%llx\n", r1[9]);
     printf("r1:\n");
     parse_to_hex(r1);
 
-    uint64 r3[10];
+    uint64 r3[10] = {0};
     printf("X:\n");
     parse_to_hex(X);
 
-    sub(poly1, r1, r3);
+    sub(r1, r2, r3);
     printf("x-QP:");
     parse_to_hex(r3);
+
+    for (int i = 0; i < 10; i++)
+    {
+        r[i] = r3[i];
+    }
 
     if (geq(r3, P) == 1)
     {
@@ -200,7 +206,7 @@ void main()
 
     uint64 poly4[10] = {0};
 
-    barret(poly1, poly4);
+    barret(poly3, poly4);
 
     for (int i = 0; i < 10; i++)
     {
