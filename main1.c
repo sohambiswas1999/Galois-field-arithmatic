@@ -72,12 +72,15 @@ uint64 mult(uint64 *poly1, uint64 *poly2, uint64 *p)
     // uint64 p[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     // uint64 *p = (uint64 *)calloc(20, sizeof(uint64));
     uint64 carry = 0;
-    for (int i = 9; i >= 0; i--)
+    int k, m;
+    for (int i = 0; i < 10; i++)
     {
-        for (int j = 9; j >= 0; j--)
+        for (int j = 0; j < 10; j++)
         {
+            k = 9 - i;
+            m = 9 - j;
             // printf("multiplying: %llx,%llx\n", poly1[i], poly2[j]);
-            p[i + j] = p[i + j] + (poly1[i] * poly2[j]);
+            p[k + m + 1] = p[k + m + 1] + (poly1[k] * poly2[m]);
             // printf("after mult:\n%llx\n", p[i + j]);
         }
     }
@@ -201,8 +204,13 @@ void main()
 
     uint64 *poly3 = (uint64 *)calloc(20, sizeof(uint64));
     mult(poly1, poly2, poly3);
+    printf("result of mult\n");
+    for (int i = 19; i >= 0; i--)
+    {
+        printf("%llx\n", poly3[i]);
+    }
     printf("input barret:\n");
-    parse_to_hex(poly3);
+    parse_to_hex(poly3 + 9);
 
     uint64 poly4[10] = {0};
 
