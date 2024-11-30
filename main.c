@@ -347,7 +347,7 @@ void main()
     parse(poly1, input);
 
     printf("expei:%llx", poly1[12]);
-    parse(poly2, input);
+    parse(poly2, input1);
 
     uint64 *poly3 = (uint64 *)calloc(20, sizeof(uint64));
     mult(poly1, poly2, poly3);
