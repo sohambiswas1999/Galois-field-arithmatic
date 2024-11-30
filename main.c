@@ -39,6 +39,21 @@ uint64 hex2int(char hex)
     perror("hex input not valid");
     exit(EXIT_FAILURE);
 }
+char num1[64] = "7a23cf7fec37c07c5fb5c76dcea6fcab18639b651d836857a3b92f295ea5fc50";
+char num2[64] = "4b72574b440c3242908bd43b110e0db65fa2267c10afd10b69a9e26555f9bd2c";
+
+void chartoarray(char *num, uint16_t *array)
+{
+    for (int i = 0; i < 32; i++)
+    {
+        array[i] = 0;
+    }
+    for (int i = 0; i < 32; i++)
+    {
+        array[i] = hex2int(num[(2 * i) + 1]) + 16 * hex2int(num[(2 * i)]);
+        // sprintf(array + i * 2)
+    }
+}
 
 void parse(uint64 *poly, uint16_t *h)
 {
@@ -340,26 +355,75 @@ void barret(uint64 *poly1, uint64 *r)
         r[i] = r3[i];
     }
 }
+
+void exprighttoleft(uint64 *poly1, uint64 *pow, uint64 *result)
+{
+    result[9] = 0;
+    result[8] = 0;
+    result[7] = 0;
+    result[6] = 0;
+    result[5] = 0;
+    result[4] = 0;
+    result[3] = 0;
+    result[2] = 0;
+    result[1] = 0;
+    result[0] = 1;
+
+    uint64 temp[20] = {0};
+    for (int i = 0; i < 10; i++)
+    {
+        for (int l = 0; l < 29; l++)
+        {
+
+            if (((pow[i] >> l) & 0x1) == 1)
+            {
+                for (int j = 0; j < 20; j++)
+                    temp[j] = 0;
+
+                mult(poly1, result, temp);
+                barret(temp, result);
+            }
+            for (int j = 0; j < 20; j++)
+                temp[j] = 0;
+
+            mult(poly1, poly1, temp);
+            barret(temp, poly1);
+        }
+    }
+    printf("final result\n");
+    parse_to_hex(result);
+}
 void main()
 {
     uint64 poly1[10];
     uint64 poly2[10];
-    parse(poly1, input);
 
-    printf("expei:%llx", poly1[12]);
-    parse(poly2, input1);
+    uint16_t input4[32];
+    uint16_t input5[32];
 
-    uint64 *poly3 = (uint64 *)calloc(20, sizeof(uint64));
-    mult(poly1, poly2, poly3);
-    printf("result of mult\n");
-    for (int i = 0; i < 20; i++)
-    {
-        printf("%llx\n", poly3[i]);
-    }
-    printf("input barret:\n");
-    parse_to_hex(poly3);
+    chartoarray(num2, input4);
+    chartoarray(num1, input5);
 
-    uint64 poly4[10] = {0};
+    parse(poly1, input4);
+    parse(poly2, input5);
+
+    printf("poly1\n");
+    parse_to_hex(poly1);
+    printf("poly2\n");
+    parse_to_hex(poly2);
+
+    uint64 poly3[10] = {0};
+
+    /*mult(poly1, poly2, poly3);
+     printf("result of mult\n");
+     for (int i = 0; i < 20; i++)
+     {
+         printf("%llx\n", poly3[i]);
+     }
+     printf("input barret:\n");
+     parse_to_hex(poly3);*/
+
+    /*uint64 poly4[10] = {0};
 
     barret(poly3, poly4);
 
@@ -368,5 +432,9 @@ void main()
         printf("%llx\n", poly4[i]);
     }
 
-    parse_to_hex(poly4);
+    parse_to_hex(poly4);*/
+
+    exprighttoleft(poly1, poly2, poly3);
+    printf("poly4\n");
+    parse_to_hex(poly3);
 }
