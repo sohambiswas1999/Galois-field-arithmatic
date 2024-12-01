@@ -283,18 +283,24 @@ void modsub(uint64 *poly1, uint64 *poly2, uint64 *result)
 
     parse(prime, p);
 
-    if (geq(poly1, poly2) == 1)
+    for (int i = 9; i >= 0; i--)
     {
-        for (int i = 9; i >= 0; i--)
-        {
-            temp[i] = poly1[i] + (poly2[i] ^ 0x1fffffff) + carry;
-            carry = temp[i] >> 29;
-            temp[i] = temp[i] & 0x1fffffff;
-        }
+        temp[i] = poly1[i] + (poly2[i] ^ 0x1fffffff) + carry;
+        carry = temp[i] >> 29;
+        temp[i] = temp[i] & 0x1fffffff;
     }
-    else
+
+    if (geq(poly1, poly2) != 1)
     {
         add(temp, prime, result);
+    }
+
+    else
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            result[i] = temp[i];
+        }
     }
 }
 
@@ -432,14 +438,66 @@ void pointdoubling(point p1, point result)
     parse(A, inputa);
     parse(B, inputb);
 
-    parse_to_hex(A);
-    parse_to_hex(B);
+    // computing X_2:
+    uint64 tx1[10] = {0};
+    uint64 tx2[10] = {0};
+    uint64 ty1[10] = {0};
+    uint64 ty2[10] = {0};
+    uint64 t1[10] = {0};
+    uint64 t2[10] = {0};
+    uint64 t3[10] = {0};
+
+    modmult(p1.x, p1.x, tx1); // tx1=x^2 mod p
+    modadd(tx1, tx1, tx2);    // tx2=2.(x^2) mod p
+    modadd(tx1, tx2, tx1);    // tx1=3.(x^2) mod p
+    modadd(tx1, A, tx1);      // tx1=3.(x^2)+A mod p
+    modadd(p1.y, p1.y, ty1);  // ty1=2y mod p
+    modinv(ty1, ty2);         // ty2=1/(2y) mod p
+    modmult(ty2, tx1, t1);    // t1=(3.(x^2)+A)/2y mod p
+    modmult(t1, t1, t3);      // t3=((3.(x^2)+A)/2y)^2 mod p
+    modadd(p1.x, p1.x, t2);   // t2=2x mod p
+    modsub(t1, t2, result.x); // x_2=((3.(x^2)+A)/2y)^2 - 2x mod p
+
+    // computing Y_2:
+
+    // re-initialize the temp ver
+    for (int i = 0; i < 10; i++)
+    {
+        tx1[i] = 0;
+        tx2[i] = 0;
+        ty1[i] = 0;
+        ty2[i] = 0;
+        t3[i] = 0;
+        t2[i] = 0;
+    }
+    printf("p1.x:\n");
+    parse_to_hex(p1.x);
+    printf("result.x:\n");
+    parse_to_hex(result.x);
+    modsub(p1.x, result.x, tx1);
+
+    printf("t1:\n");
+    parse_to_hex(t1);
+    printf("tx1:\n");
+    parse_to_hex(tx1);
+    modmult(t1, tx1, tx2);
+
+    printf("tx2\n");
+    parse_to_hex(tx2);
+    printf("p1.y\n");
+    parse_to_hex(p1.y);
+    modsub(tx2, p1.y, t3);
+
+    printf("outcome(x):");
+    parse_to_hex(result.x);
+    printf("outcome(y):");
+    parse_to_hex(t3);
 }
 
 void main()
 {
     point gen;
-    point outcome;
+    point outcome = {{0}, {0}};
 
     uint16_t inputx[32];
     uint16_t inputy[32];
