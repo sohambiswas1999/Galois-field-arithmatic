@@ -441,7 +441,7 @@ uint64 modmult(uint64 *poly1, uint64 *poly2, uint64 *result)
     barret(p, result);
 }
 
-void pointdoubling(point p1, point result)
+void pointdoubling(point p1, point *result)
 {
     uint64 A[10] = {0};
     uint64 B[10] = {0};
@@ -473,16 +473,16 @@ void pointdoubling(point p1, point result)
     uint64 t2[10] = {0};
     uint64 t3[10] = {0};
 
-    modmult(p1.x, p1.x, tx1); // tx1=x^2 mod p
-    modadd(tx1, tx1, tx2);    // tx2=2.(x^2) mod p
-    modadd(tx1, tx2, tx1);    // tx1=3.(x^2) mod p
-    modadd(tx1, A, tx1);      // tx1=3.(x^2)+A mod p
-    modadd(p1.y, p1.y, ty1);  // ty1=2y mod p
-    modinv(ty1, ty2);         // ty2=1/(2y) mod p
-    modmult(ty2, tx1, t1);    // t1=(3.(x^2)+A)/2y mod p
-    modmult(t1, t1, t3);      // t3=((3.(x^2)+A)/2y)^2 mod p
-    modadd(p1.x, p1.x, t2);   // t2=2x mod p
-    modsub(t3, t2, result.x); // x_2=((3.(x^2)+A)/2y)^2 - 2x mod p
+    modmult(p1.x, p1.x, tx1);  // tx1=x^2 mod p
+    modadd(tx1, tx1, tx2);     // tx2=2.(x^2) mod p
+    modadd(tx1, tx2, tx1);     // tx1=3.(x^2) mod p
+    modadd(tx1, A, tx1);       // tx1=3.(x^2)+A mod p
+    modadd(p1.y, p1.y, ty1);   // ty1=2y mod p
+    modinv(ty1, ty2);          // ty2=1/(2y) mod p
+    modmult(ty2, tx1, t1);     // t1=(3.(x^2)+A)/2y mod p
+    modmult(t1, t1, t3);       // t3=((3.(x^2)+A)/2y)^2 mod p
+    modadd(p1.x, p1.x, t2);    // t2=2x mod p
+    modsub(t3, t2, result->x); // x_2=((3.(x^2)+A)/2y)^2 - 2x mod p
 
     // computing Y_2:
 
@@ -497,9 +497,9 @@ void pointdoubling(point p1, point result)
         t2[i] = 0;
     }
 
-    modsub(p1.x, result.x, tx1);
+    modsub(p1.x, result->x, tx1);
     modmult(t1, tx1, tx2);
-    modsub(tx2, p1.y, result.y);
+    modsub(tx2, p1.y, result->y);
 
     /*printf("outcome(x):");
     parse_to_hex(result.x);
@@ -507,7 +507,7 @@ void pointdoubling(point p1, point result)
     parse_to_hex(result.y);*/
 }
 
-void pointaddition(point p1, point p2, point result)
+void pointaddition(point p1, point p2, point *result)
 {
     // computing X3
     uint64 tx1[10] = {0};
@@ -521,7 +521,7 @@ void pointaddition(point p1, point p2, point result)
     modmult(ty1, tx2, ty1);
     modmult(ty1, ty1, ty2);
     modadd(p1.x, p2.x, tx1);
-    modsub(ty2, tx1, result.x);
+    modsub(ty2, tx1, result->x);
 
     // computing Y3
     for (int i = 0; i < 10; i++)
@@ -531,16 +531,23 @@ void pointaddition(point p1, point p2, point result)
         ty2[i] = 0;
     }
 
-    modsub(p1.x, result.x, tx1);
+    modsub(p1.x, result->x, tx1);
     modmult(ty1, tx1, ty2);
-    modsub(ty2, p1.y, result.y);
+    modsub(ty2, p1.y, result->y);
+
+    printf("result.x:\n");
+    parse_to_hex(result->x);
+
+    printf("result.y:\n");
+    parse_to_hex(result->y);
 }
 
 void main()
 {
     point pt1 = {{0}, {0}};
     point pt2 = {{0}, {0}};
-    point outcome = {{0}, {0}};
+    point *outcome = NULL;
+    outcome = (point *)malloc(sizeof(point));
 
     uint16_t inputx[32];
     uint16_t inputy[32];
@@ -620,7 +627,7 @@ void main()
      parse_to_hex(poly1);
      modinv(poly1, poly5);*/
 
-    // pointdoubling(gen, outcome);
+    pointdoubling(pt1, outcome);
 
     /* uint16_t input3[32] = {0};
      uint16_t input4[32] = {0};
@@ -646,4 +653,12 @@ void main()
      modmult(poly2, poly1, resadd);
      printf("resadd:\n");
      parse_to_hex(resadd);*/
+
+    // pointaddition(pt1, pt2, outcome);
+
+    printf("outcome.x:\n");
+    parse_to_hex(outcome->x);
+
+    printf("outcome.y:\n");
+    parse_to_hex(outcome->y);
 }
