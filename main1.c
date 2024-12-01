@@ -6,6 +6,12 @@ typedef unsigned int uint32;
 typedef char uint8;
 typedef long long unsigned int uint64;
 
+typedef struct
+{
+    uint64 x[10];
+    uint64 y[10];
+} point;
+
 uint16_t input[32] = {0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
                       0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x1b, 0x2b, 0x3b,
@@ -26,10 +32,21 @@ static uint16_t p[32] = {0xE9, 0x2E, 0x40, 0xAD, 0x6F, 0x28, 0x1C, 0x8A,
                          0x94, 0x55, 0xBE, 0xC8, 0xCE, 0xEA, 0x04, 0x3A,
                          0x61, 0x4C, 0x83, 0x5B, 0x7F, 0xE9, 0xEF, 0xF5};
 
+static uint16_t pmin2[32] = {0xE9, 0x2E, 0x40, 0xAD, 0x6F, 0x28, 0x1C, 0x8A,
+                             0x08, 0x2A, 0xFD, 0xC4, 0x9E, 0x13, 0x72, 0x65,
+                             0x94, 0x55, 0xBE, 0xC8, 0xCE, 0xEA, 0x04, 0x3A,
+                             0x61, 0x4C, 0x83, 0x5B, 0x7F, 0xE9, 0xEF, 0xF3};
+
 uint64 poly[10];
 
 char num1[64] = "7a23cf7fec37c07c5fb5c76dcea6fcab18639b651d836857a3b92f295ea5fc50";
 char num2[64] = "4b72574b440c3242908bd43b110e0db65fa2267c10afd10b69a9e26555f9bd2c";
+
+char a[64] = "84951adc7a73375eaeb99fc09c0633ed8a5f69bb13c8219057857504db29c1dd";
+char b[64] = "e4ce92ff0fb08e9a0c9e33f369c5f73d9fb09ec7ef9b804a3d3c7435c3d418f9";
+
+char genx[64] = "d824e020fda73095064e9e6506b30a8d9302d16916d35d4d2fe26dfca164bfd8";
+char geny[64] = "816f2ccab116363a8e26640d716b6d7e2890b116cc81dcbd35f5a07753030233";
 
 uint64
 hex2int(char hex)
@@ -157,6 +174,17 @@ void sub(uint64 *poly1, uint64 *poly2, uint64 *p)
     }
 }
 
+void add(uint64 *poly1, uint64 *poly2, uint64 *result)
+{
+    uint64 carry = 0;
+    for (int i = 9; i >= 0; i--)
+    {
+        result[i] = poly1[i] + poly2[i] + carry;
+        carry = result[i] >> 29;
+        result[i] = result[i] & 0x1fffffff;
+    }
+}
+
 void barret(uint64 *poly1, uint64 *r)
 { // initiate r with 0
     for (int i = 0; i < 10; i++)
@@ -227,8 +255,60 @@ void barret(uint64 *poly1, uint64 *r)
     }
 }
 
-void exprighttoleft(uint64 *poly1, uint64 *pow, uint64 *result)
+void modadd(uint64 *poly1, uint64 *poly2, uint64 *result)
 {
+    uint64 prime[10] = {0};
+    parse(prime, p);
+
+    uint64 carry = 0;
+    uint64 temp[10] = {0};
+    for (int i = 9; i >= 0; i--)
+    {
+        temp[i] = poly1[i] + poly2[i] + carry;
+        carry = temp[i] >> 29;
+        temp[i] = temp[i] & 0x1fffffff;
+    }
+
+    if (geq(temp, prime) == 1)
+    {
+        sub(temp, prime, result);
+    }
+}
+
+void modsub(uint64 *poly1, uint64 *poly2, uint64 *result)
+{
+    uint64 carry = 1;
+    uint64 temp[10] = {0};
+    uint64 prime[10] = {0};
+
+    parse(prime, p);
+
+    if (geq(poly1, poly2) == 1)
+    {
+        for (int i = 9; i >= 0; i--)
+        {
+            temp[i] = poly1[i] + (poly2[i] ^ 0x1fffffff) + carry;
+            carry = temp[i] >> 29;
+            temp[i] = temp[i] & 0x1fffffff;
+        }
+    }
+    else
+    {
+        add(temp, prime, result);
+    }
+}
+
+void exprighttoleft(uint64 *poly12, uint64 *pow1, uint64 *result)
+{
+    uint64 pow[10] = {0};
+    uint64 poly1[10] = {0};
+
+    for (int i = 0; i < 10; i++)
+    {
+        pow[i] = pow1[i];
+        poly1[i] = poly12[i];
+    }
+
     result[9] = 1;
     result[8] = 0;
     result[7] = 0;
@@ -291,27 +371,110 @@ void explefttoright(uint64 *base, uint64 *pow, uint64 *result)
     }
 }
 
+void modinv(uint64 *a, uint64 *result)
+{
+    uint64 psub2[10] = {0};
+
+    parse(psub2, pmin2);
+
+    printf("pmin2:\n");
+    parse_to_hex(psub2);
+
+    exprighttoleft(a, psub2, result);
+
+    printf("result is\n");
+    parse_to_hex(result);
+}
+
+uint64 modmult(uint64 *poly1, uint64 *poly2, uint64 *result)
+{
+    // uint64 p[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // uint64 *p = (uint64 *)calloc(20, sizeof(uint64));
+    uint64 carry = 0;
+    uint64 p[20] = {0};
+    int k, m;
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 10; j++)
+        {
+            k = 9 - i;
+            m = 9 - j;
+            // printf("multiplying: %llx,%llx\n", poly1[i], poly2[j]);
+            p[k + m + 1] = p[k + m + 1] + (poly1[k] * poly2[m]);
+            // printf("after mult:\n%llx\n", p[i + j]);
+        }
+    }
+
+    for (int i = 19; i >= 0; i--)
+    {
+        p[i] = p[i] + carry;
+        // printf("after carry:\n%llx\n", p[i]);
+        carry = p[i] >> 29;
+        // printf("carry:\n%llx\n", carry);
+        p[i] = p[i] & 0x1fffffff;
+        // printf("last 29 bits:\n%llx\n", p[i]);
+    }
+
+    barret(p, result);
+}
+
+void pointdoubling(point p1, point result)
+{
+    uint64 A[10] = {0};
+    uint64 B[10] = {0};
+
+    uint16_t inputa[32] = {0};
+    uint16_t inputb[32] = {0};
+
+    chartoarray(a, inputa);
+    chartoarray(b, inputb);
+
+    parse(A, inputa);
+    parse(B, inputb);
+
+    parse_to_hex(A);
+    parse_to_hex(B);
+}
+
 void main()
 {
-    uint16_t input4[32];
-    uint16_t input5[32];
+    point gen;
+    point outcome;
 
-    chartoarray(num2, input4);
-    chartoarray(num1, input5);
+    uint16_t inputx[32];
+    uint16_t inputy[32];
 
-    uint64 poly1[10];
-    uint64 poly2[10];
+    chartoarray(genx, inputx);
+    chartoarray(geny, inputy);
 
-    parse(poly1, input4);
-    parse(poly2, input5);
+    parse(gen.x, inputx);
+    parse(gen.y, inputy);
 
-    printf("poly1\n");
-    parse_to_hex(poly1);
-    printf("poly2\n");
-    parse_to_hex(poly2);
+    printf("gen(x):\n");
+    parse_to_hex(gen.x);
+    printf("gen(y):\n");
+    parse_to_hex(gen.y);
 
-    uint64 poly3[10] = {0};
-    uint64 poly4[10] = {0};
+    /* uint16_t input4[32];
+     uint16_t input5[32];
+
+     chartoarray(num2, input4);
+     chartoarray(num1, input5);
+
+     uint64 poly1[10];
+     uint64 poly2[10];
+
+     parse(poly1, input4);
+     parse(poly2, input5);
+
+     printf("poly1\n");
+     parse_to_hex(poly1);
+     printf("poly2\n");
+     parse_to_hex(poly2);
+
+     uint64 poly3[10] = {0};
+     uint64 poly4[10] = {0};
+     uint64 poly5[10] = {0};*/
     // mult(poly1, poly2, poly3);
     //  printf("result of mult\n");
     /*for (int i = 19; i >= 0; i--)
@@ -332,11 +495,15 @@ void main()
 
     // parse_to_hex(outcome);
 
-    explefttoright(poly1, poly2, poly3);
-    printf("poly3\n");
-    parse_to_hex(poly3);
+    /* explefttoright(poly1, poly2, poly3);
+     printf("poly3\n");
+     parse_to_hex(poly3);
 
-    exprighttoleft(poly1, poly2, poly4);
-    printf("poly4\n");
-    parse_to_hex(poly4);
+     exprighttoleft(poly1, poly2, poly4);
+     printf("poly4\n");
+     parse_to_hex(poly4);
+     parse_to_hex(poly1);
+     modinv(poly1, poly5);*/
+
+    pointdoubling(gen, outcome);
 }

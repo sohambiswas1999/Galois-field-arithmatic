@@ -42,6 +42,9 @@ uint64 hex2int(char hex)
 char num1[64] = "7a23cf7fec37c07c5fb5c76dcea6fcab18639b651d836857a3b92f295ea5fc50";
 char num2[64] = "4b72574b440c3242908bd43b110e0db65fa2267c10afd10b69a9e26555f9bd2c";
 
+char a[64] = "84951adc7a73375eaeb99fc09c0633ed8a5f69bb13c8219057857504db29c1dd";
+char b[64] = "e4ce92ff0fb08e9a0c9e33f369c5f73d9fb09ec7ef9b804a3d3c7435c3d418f9";
+
 void chartoarray(char *num, uint16_t *array)
 {
     for (int i = 0; i < 32; i++)
@@ -289,26 +292,26 @@ void barret(uint64 *poly1, uint64 *r)
     }
     uint64 *Q = (uint64 *)calloc(10, sizeof(uint64));
     Q = eightshiftofx(X); // x/ theta^L-1
-    printf("Q:\n");
-    parse_to_hex(Q);
+    // printf("Q:\n");
+    // parse_to_hex(Q);
 
     uint64 Q2[20] = {0};
 
     uint64 T[10] = {0};
     parset(T, t);
-    parse_to_hex(T);
+    // parse_to_hex(T);
 
     uint64 P[10] = {0};
     parse(P, p);
-    parse_to_hex(P);
+    // parse_to_hex(P);
 
     mult(Q, T, Q2); // Q=QT
-    printf("QT:\n");
-    parse_to_hex(Q2);
+    // printf("QT:\n");
+    // parse_to_hex(Q2);
 
     uint64 *te = tenshift(Q2);
-    printf("Q/theta^(L+1):");
-    parse_to_hex(te);
+    // printf("Q/theta^(L+1):");
+    // parse_to_hex(te);
 
     uint64 Q3[20] = {0};
     mult(te, P, Q3); // Q/theta^L+1.p
@@ -326,27 +329,27 @@ void barret(uint64 *poly1, uint64 *r)
     r1[7] = Q3[7];
     r1[8] = Q3[8];
     r1[9] = Q3[9];
-    printf("%llx\n", r1[9]);
-    printf("r1:\n");
-    parse_to_hex(r1);
+    // printf("%llx\n", r1[9]);
+    // printf("r1:\n");
+    // parse_to_hex(r1);
 
     uint64 r3[10];
-    printf("X:\n");
-    parse_to_hex(X);
+    // printf("X:\n");
+    // parse_to_hex(X);
 
     sub(poly1, r1, r3);
-    printf("x-QP:");
-    parse_to_hex(r3);
+    // printf("x-QP:");
+    // parse_to_hex(r3);
 
     if (geq(r3, P) == 1)
     {
-        printf("hi\n");
+        // printf("hi\n");
         sub(r3, P, r);
     }
 
     if (geq(r, P) == 1)
     {
-        printf("hi\n");
+        // printf("hi\n");
         sub(r, P, r3);
     }
 
