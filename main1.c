@@ -51,6 +51,9 @@ char geny[64] = "816f2ccab116363a8e26640d716b6d7e2890b116cc81dcbd35f5a0775303023
 char genx1[64] = "7bcf4f99f43343216c8f2b23d618b3ae693d3f8de6ab27b6466f0f43259139c7";
 char geny1[64] = "458df381ed1dc51488ef9bdfcbfc3b78363709dbd18a92410c940daa0c6c00c5";
 
+char genx12[64] = "0000000000000000000000000000000000000000000000000000000000000000";
+char geny12[64] = "0000000000000000000000000000000000000000000000000000000000000000";
+
 uint64
 hex2int(char hex)
 {
@@ -263,9 +266,6 @@ void modadd(uint64 *poly1, uint64 *poly2, uint64 *result)
     uint64 prime[10] = {0};
     parse(prime, p);
 
-    printf("prime:\n");
-    parse_to_hex(prime);
-
     uint64 carry = 0;
     uint64 temp[10] = {0};
     for (int i = 9; i >= 0; i--)
@@ -274,9 +274,6 @@ void modadd(uint64 *poly1, uint64 *poly2, uint64 *result)
         carry = temp[i] >> 29;
         temp[i] = temp[i] & 0x1fffffff;
     }
-
-    printf("temp\n");
-    parse_to_hex(temp);
 
     if (geq(temp, prime) == 1)
     {
@@ -364,8 +361,6 @@ void exprighttoleft(uint64 *poly12, uint64 *pow1, uint64 *result)
             barret(temp, poly1);
         }
     }
-    printf("final result\n");
-    parse_to_hex(result);
 }
 
 void explefttoright(uint64 *base, uint64 *pow, uint64 *result)
@@ -400,13 +395,7 @@ void modinv(uint64 *a, uint64 *result)
 
     parse(psub2, pmin2);
 
-    printf("pmin2:\n");
-    parse_to_hex(psub2);
-
     exprighttoleft(a, psub2, result);
-
-    printf("result is\n");
-    parse_to_hex(result);
 }
 
 uint64 modmult(uint64 *poly1, uint64 *poly2, uint64 *result)
@@ -534,6 +523,48 @@ void pointaddition(point p1, point p2, point *result)
     modsub(p1.x, result->x, tx1);
     modmult(ty1, tx1, ty2);
     modsub(ty2, p1.y, result->y);
+}
+
+void scalarmult(point p1, uint64 *a, point *result)
+{
+
+    for (int i = 0; i < 10; i++)
+    {
+        result->x[i] = p1.x[i];
+        result->y[i] = p1.y[i];
+    }
+
+    printf("result.x\n");
+    parse_to_hex(result->x);
+    printf("result.x\n");
+    parse_to_hex(result->y);
+
+    point temp_p1;
+    point *temp_p2 = NULL;
+    temp_p2 = (point *)malloc(sizeof(point));
+
+    for (int i = 0; i < 10; i++)
+    {
+        temp_p2->x[i] = 0;
+        temp_p2->y[i] = 0;
+    }
+
+    for (int i = 254; i >= 0; i--)
+    {
+        pointdoubling(*result, result);
+        if ((a[8 - (i / 29)] >> (i % 29)) & 0x1 == 1)
+        {
+            pointaddition(*result, p1, result);
+        }
+        /*else
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                result->x[i] = temp_p2->x[i];
+                result->y[i] = temp_p2->y[i];
+            }
+        }*/
+    }
 
     printf("result.x:\n");
     parse_to_hex(result->x);
@@ -576,6 +607,15 @@ void main()
     parse_to_hex(pt2.x);
     printf("pt2.y:\n");
     parse_to_hex(pt2.y);
+
+    uint64 constant[10] = {0};
+    uint16_t constinput[32];
+
+    chartoarray(num1, constinput);
+    parse(constant, constinput);
+
+    printf("const:\n");
+    parse_to_hex(constant);
 
     /* uint16_t input4[32];
      uint16_t input5[32];
@@ -627,7 +667,7 @@ void main()
      parse_to_hex(poly1);
      modinv(poly1, poly5);*/
 
-    pointdoubling(pt1, outcome);
+    // pointdoubling(pt1, outcome);
 
     /* uint16_t input3[32] = {0};
      uint16_t input4[32] = {0};
@@ -655,6 +695,8 @@ void main()
      parse_to_hex(resadd);*/
 
     // pointaddition(pt1, pt2, outcome);
+
+    scalarmult(pt1, constant, outcome);
 
     printf("outcome.x:\n");
     parse_to_hex(outcome->x);
