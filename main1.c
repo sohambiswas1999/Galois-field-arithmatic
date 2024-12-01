@@ -452,14 +452,14 @@ void pointdoubling(point p1, point result)
     parse(A, inputa);
     parse(B, inputb);
 
-    printf("A:\n");
+    /*printf("A:\n");
     parse_to_hex(A);
     printf("B:\n");
     parse_to_hex(B);
     printf("p1.x\n");
     parse_to_hex(p1.x);
     printf("p1.y\n");
-    parse_to_hex(p1.y);
+    parse_to_hex(p1.y);*/
 
     // computing X_2:
     uint64 tx1[10] = {0};
@@ -493,28 +493,37 @@ void pointdoubling(point p1, point result)
         t3[i] = 0;
         t2[i] = 0;
     }
-    printf("p1.x:\n");
-    parse_to_hex(p1.x);
-    printf("result.x:\n");
-    parse_to_hex(result.x);
+
     modsub(p1.x, result.x, tx1);
-
-    printf("t1:\n");
-    parse_to_hex(t1);
-    printf("tx1:\n");
-    parse_to_hex(tx1);
     modmult(t1, tx1, tx2);
+    modsub(tx2, p1.y, result.y);
 
-    printf("tx2\n");
-    parse_to_hex(tx2);
-    printf("p1.y\n");
-    parse_to_hex(p1.y);
-    modsub(tx2, p1.y, t3);
-
-    printf("outcome(x):");
+    /*printf("outcome(x):");
     parse_to_hex(result.x);
     printf("outcome(y):");
-    parse_to_hex(t3);
+    parse_to_hex(result.y);*/
+}
+
+void pointaddition(point p1, point p2, point result)
+{
+    // computing X3
+    uint64 tx1[10] = {0};
+    uint64 tx2[10] = {0};
+    uint64 ty1[10] = {0};
+    uint64 ty2[10] = {0};
+
+    modsub(p2.y, p1.y, ty1);
+    modsub(p2.x, p1.x, tx1);
+    modinv(tx1, tx2);
+    modmult(ty1, tx2, ty1);
+    modmult(ty1, ty1, ty2);
+    modadd(p1.x, p2.x, tx1);
+    modsub(ty2, tx1, result.x);
+
+    // computing Y3
+    for (int i = 0; i < 10; i++)
+    {
+    }
 }
 
 void main()
