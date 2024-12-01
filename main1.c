@@ -48,6 +48,9 @@ char b[64] = "e4ce92ff0fb08e9a0c9e33f369c5f73d9fb09ec7ef9b804a3d3c7435c3d418f9";
 char genx[64] = "d824e020fda73095064e9e6506b30a8d9302d16916d35d4d2fe26dfca164bfd8";
 char geny[64] = "816f2ccab116363a8e26640d716b6d7e2890b116cc81dcbd35f5a07753030233";
 
+char genx1[64] = "7bcf4f99f43343216c8f2b23d618b3ae693d3f8de6ab27b6466f0f43259139c7";
+char geny1[64] = "458df381ed1dc51488ef9bdfcbfc3b78363709dbd18a92410c940daa0c6c00c5";
+
 uint64
 hex2int(char hex)
 {
@@ -523,27 +526,49 @@ void pointaddition(point p1, point p2, point result)
     // computing Y3
     for (int i = 0; i < 10; i++)
     {
+        tx1[i] = 0;
+        tx2[i] = 0;
+        ty2[i] = 0;
     }
+
+    modsub(p1.x, result.x, tx1);
+    modmult(ty1, tx1, ty2);
+    modsub(ty2, p1.y, result.y);
 }
 
 void main()
 {
-    point gen;
+    point pt1 = {{0}, {0}};
+    point pt2 = {{0}, {0}};
     point outcome = {{0}, {0}};
 
     uint16_t inputx[32];
     uint16_t inputy[32];
 
+    uint16_t inputx1[32];
+    uint16_t inputy1[32];
+
     chartoarray(genx, inputx);
     chartoarray(geny, inputy);
 
-    parse(gen.x, inputx);
-    parse(gen.y, inputy);
+    chartoarray(genx1, inputx1);
+    chartoarray(geny1, inputy1);
 
-    printf("gen(x):\n");
-    parse_to_hex(gen.x);
-    printf("gen(y):\n");
-    parse_to_hex(gen.y);
+    parse(pt1.x, inputx);
+    parse(pt1.y, inputy);
+
+    parse(pt2.x, inputx1);
+    parse(pt2.y, inputy1);
+
+    printf("pt1.x:\n");
+    parse_to_hex(pt1.x);
+    printf("pt1.y:\n");
+    parse_to_hex(pt1.y);
+
+    printf("pt2.x:\n");
+    parse_to_hex(pt2.x);
+    printf("pt2.y:\n");
+    parse_to_hex(pt2.y);
 
     /* uint16_t input4[32];
      uint16_t input5[32];
@@ -595,7 +620,7 @@ void main()
      parse_to_hex(poly1);
      modinv(poly1, poly5);*/
 
-    pointdoubling(gen, outcome);
+    // pointdoubling(gen, outcome);
 
     /* uint16_t input3[32] = {0};
      uint16_t input4[32] = {0};
