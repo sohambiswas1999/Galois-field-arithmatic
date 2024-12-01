@@ -260,6 +260,9 @@ void modadd(uint64 *poly1, uint64 *poly2, uint64 *result)
     uint64 prime[10] = {0};
     parse(prime, p);
 
+    printf("prime:\n");
+    parse_to_hex(prime);
+
     uint64 carry = 0;
     uint64 temp[10] = {0};
     for (int i = 9; i >= 0; i--)
@@ -269,9 +272,20 @@ void modadd(uint64 *poly1, uint64 *poly2, uint64 *result)
         temp[i] = temp[i] & 0x1fffffff;
     }
 
+    printf("temp\n");
+    parse_to_hex(temp);
+
     if (geq(temp, prime) == 1)
     {
         sub(temp, prime, result);
+    }
+
+    else
+    {
+        for (int index = 0; index < 10; index++)
+        {
+            result[index] = temp[index];
+        }
     }
 }
 
@@ -297,9 +311,9 @@ void modsub(uint64 *poly1, uint64 *poly2, uint64 *result)
 
     else
     {
-        for (int i = 0; i < 10; i++)
+        for (int index = 0; index < 10; index++)
         {
-            result[i] = temp[i];
+            result[index] = temp[index];
         }
     }
 }
@@ -438,6 +452,15 @@ void pointdoubling(point p1, point result)
     parse(A, inputa);
     parse(B, inputb);
 
+    printf("A:\n");
+    parse_to_hex(A);
+    printf("B:\n");
+    parse_to_hex(B);
+    printf("p1.x\n");
+    parse_to_hex(p1.x);
+    printf("p1.y\n");
+    parse_to_hex(p1.y);
+
     // computing X_2:
     uint64 tx1[10] = {0};
     uint64 tx2[10] = {0};
@@ -456,7 +479,7 @@ void pointdoubling(point p1, point result)
     modmult(ty2, tx1, t1);    // t1=(3.(x^2)+A)/2y mod p
     modmult(t1, t1, t3);      // t3=((3.(x^2)+A)/2y)^2 mod p
     modadd(p1.x, p1.x, t2);   // t2=2x mod p
-    modsub(t1, t2, result.x); // x_2=((3.(x^2)+A)/2y)^2 - 2x mod p
+    modsub(t3, t2, result.x); // x_2=((3.(x^2)+A)/2y)^2 - 2x mod p
 
     // computing Y_2:
 
@@ -564,4 +587,29 @@ void main()
      modinv(poly1, poly5);*/
 
     pointdoubling(gen, outcome);
+
+    /* uint16_t input3[32] = {0};
+     uint16_t input4[32] = {0};
+
+     uint64 poly1[10];
+     uint64 poly2[10];
+
+     chartoarray(num1, input3);
+     chartoarray(num2, input4);
+
+     parse(poly1, input3);
+     parse(poly2, input4);
+
+     printf("poly1\n");
+     parse_to_hex(poly1);
+
+     printf("poly2\n");
+     parse_to_hex(poly2);
+
+     uint64 resadd[10];
+     uint64 resmul[10];
+
+     modmult(poly2, poly1, resadd);
+     printf("resadd:\n");
+     parse_to_hex(resadd);*/
 }
